@@ -35,37 +35,6 @@ SAC is an off-policy actor-critic method that incorporates entropy regularizatio
 - `homework3.py`: Environment implementation
 - `main.py`: Training and testing script
 
-## How to Run
-
-### Training
-
-To train both algorithms:
-```
-python main.py --mode train --algo both
-```
-
-Train only VPG:
-```
-python main.py --mode train --algo vpg
-```
-
-Train only SAC:
-```
-python main.py --mode train --algo sac
-```
-
-### Testing
-
-To test the trained models:
-```
-python main.py --mode test --algo vpg
-python main.py --mode test --algo sac
-```
-
-To use GUI rendering during testing:
-```
-python main.py --mode test --algo vpg --render gui
-```
 
 ### Plot Comparison
 
