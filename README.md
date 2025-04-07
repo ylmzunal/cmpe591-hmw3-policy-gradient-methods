@@ -46,19 +46,12 @@ python main.py --mode plot
 ## Results
 
 The training curves for both algorithms are saved in the `models` directory:
-- `vpg_rewards.png`: VPG training curve
-- `sac_rewards.png`: SAC training curve
-- `comparison.png`: Comparison between VPG and SAC
 
-### Performance Analysis
+![comparison](https://github.com/user-attachments/assets/71e4b32a-1eb6-4e19-a769-8904db280cb9)
 
-SAC generally outperforms VPG due to:
-1. Off-policy learning which is more sample efficient
-2. Experience replay to reuse past experiences
-3. Twin critics to reduce overestimation bias
-4. Entropy regularization to encourage exploration
+![vpg_rewards](https://github.com/user-attachments/assets/a97a88b2-7c01-41da-8a7d-e785c085492c)
 
-However, VPG is simpler to implement and understand, and can perform well with proper hyperparameter tuning.
+![sac_rewards](https://github.com/user-attachments/assets/d9a75a2a-c62d-4098-9ca1-ad3e661b03e6)
 
 ## Hyperparameters
 
