@@ -25,6 +25,8 @@ class SacAgent:
         self.alpha = alpha
         self.batch_size = batch_size
         self.automatic_entropy_tuning = automatic_entropy_tuning
+        self.initial_lr = lr
+        self.update_count = 0
         
         # Use Apple MPS if available, else use CUDA if available, else use CPU
         if torch.backends.mps.is_available():
@@ -66,6 +68,31 @@ class SacAgent:
         self.critic_losses = []
         self.policy_losses = []
         self.alpha_losses = []
+        
+    def _adjust_learning_rate(self):
+        """Decrease learning rate based on the number of updates"""
+        # Decay learning rate based on number of updates
+        # This will reduce the learning rate to 10% of initial over 10000 updates
+        if self.update_count % 1000 == 0 and self.update_count > 0:
+            # Calculate the new learning rate (exponential decay)
+            progress = min(self.update_count / 10000, 1.0)  # Normalize to [0,1]
+            critic_lr = self.initial_lr * (0.1 ** progress)  # Decay to 10% of original
+            policy_lr = critic_lr * 0.5  # Policy LR is half of critic LR
+            
+            # Update the critic optimizer with the new learning rate
+            for param_group in self.critic_optimizer.param_groups:
+                param_group['lr'] = critic_lr
+                
+            # Update the policy optimizer with the new learning rate
+            for param_group in self.policy_optimizer.param_groups:
+                param_group['lr'] = policy_lr
+                
+            # Update alpha optimizer if using automatic entropy tuning
+            if self.automatic_entropy_tuning:
+                for param_group in self.alpha_optimizer.param_groups:
+                    param_group['lr'] = critic_lr
+            
+            print(f"SAC learning rates adjusted - critic: {critic_lr:.2e}, policy: {policy_lr:.2e} after {self.update_count} updates")
         
     def decide_action(self, state, evaluate=False):
         if isinstance(state, np.ndarray):
@@ -113,6 +140,10 @@ class SacAgent:
         # Clip gradients for stability
         torch.nn.utils.clip_grad_norm_(self.critic.parameters(), 1.0)
         self.critic_optimizer.step()
+        
+        # Increment update count and adjust learning rate
+        self.update_count += 1
+        self._adjust_learning_rate()
         
         # Update actor less frequently for stability
         if np.random.rand() < 0.5:  # Only update policy 50% of the time

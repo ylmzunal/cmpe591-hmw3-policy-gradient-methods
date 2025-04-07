@@ -12,11 +12,13 @@ class Agent():
     def __init__(self, lr=3e-4):
         # Policy network and optimizer
         self.model = VPG()
+        self.initial_lr = lr
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
         self.rewards = []
         self.log_probs = []
         self.entropies = []
         self.entropy_coef = 0.01  # Added entropy coefficient for better exploration
+        self.update_count = 0  # Track the number of updates
         
         # Use Apple MPS if available, else use CUDA if available, else use CPU
         if torch.backends.mps.is_available():
@@ -71,6 +73,21 @@ class Agent():
         
         return action_for_env
     
+    def _adjust_learning_rate(self):
+        """Decrease learning rate based on the number of updates"""
+        # Decay learning rate based on number of updates
+        # This will reduce the learning rate to 10% of initial over 10000 episodes
+        if self.update_count % 1000 == 0 and self.update_count > 0:
+            # Calculate the new learning rate (exponential decay)
+            progress = min(self.update_count / 10000, 1.0)  # Normalize to [0,1]
+            new_lr = self.initial_lr * (0.1 ** progress)  # Decay to 10% of original
+            
+            # Update the optimizer with the new learning rate
+            for param_group in self.optimizer.param_groups:
+                param_group['lr'] = new_lr
+            
+            print(f"Learning rate adjusted to {new_lr:.2e} after {self.update_count} updates")
+    
     def update_model(self):
         # REINFORCE update
         if len(self.rewards) > 0:
@@ -114,6 +131,10 @@ class Agent():
                 # Clip gradients for stability
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), 0.5)
                 self.optimizer.step()
+                
+                # Track updates and adjust learning rate
+                self.update_count += 1
+                self._adjust_learning_rate()
                 
                 # Clear saved rewards and log_probs
                 self.rewards = []
