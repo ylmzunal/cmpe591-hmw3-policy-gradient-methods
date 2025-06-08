@@ -1,4 +1,4 @@
-# CMPE591 Homework 3: Policy Gradient Methods
+# Policy Gradient Methods
 
 This repository contains the implementation of policy gradient methods for a robotic manipulation task:
 1. Vanilla Policy Gradient (REINFORCE)
